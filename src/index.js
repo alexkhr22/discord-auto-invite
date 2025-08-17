@@ -1,0 +1,140 @@
+require("dotenv").config();
+const { Client, GatewayIntentBits } = require("discord.js");
+const express = require("express");
+const bodyParser = require("body-parser");
+const nodemailer = require("nodemailer");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+const client = new Client({
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildInvites,
+    ],
+  });
+
+// ---- Discord Bot Setup ---- 
+client.once("ready", () => {
+    console.log(`✅ Ready! Logged in as ${client.user.tag} on ${client.guilds.cache.size} guild(s).`);
+    client.user.setActivity({ name: "mit dem Code", type: "PLAYING" });
+  
+    // 🛠️ Debug-Ausgabe: Alle Guilds anzeigen
+    client.guilds.cache.forEach(guild => {
+      console.log(`🛠️ Bot ist in Guild: ${guild.name} (${guild.id})`);
+    });
+  });
+
+client.login(process.env.DISCORD_BOT_TOKEN);
+
+// ---- Express Setup für Stripe Webhooks ----
+const app = express();
+app.use(bodyParser.raw({ type: "application/json" }));
+
+// Webhook Endpoint
+app.post("/webhook", async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error("❌ Webhook Error:", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // --- Kauf abgeschlossen ---
+if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+  
+    // line_items nachladen
+    const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+      expand: ["line_items"],
+    });
+  
+    const lineItem = fullSession.line_items.data[0];
+    const priceId = lineItem.price.id;
+    console.log("🛒 Price ID gekauft:", priceId);
+  
+    // E-Mail prüfen
+    const customerEmail = session.customer_email || session.customer_details?.email;
+    if (!customerEmail) {
+      console.error("⚠️ Keine Kunden-E-Mail im Stripe-Event gefunden!");
+      return;
+    }
+  
+    if (priceId === process.env.PRICE_ID_GERMAN) {
+        const inviteLink = await createInvite(process.env.GUILD_ID_GERMAN);
+        await sendMailGerman(customerEmail, inviteLink);
+      } else if (priceId === process.env.PRICE_ID_ENGLISH) {
+        const inviteLink = await createInvite(process.env.GUILD_ID_ENGLISH);
+        await sendMailEnglish(customerEmail, inviteLink);
+      }
+  }
+
+  res.json({ received: true });
+});
+
+// ---- Funktion: Discord Invite erstellen ----
+async function createInvite(guildId) {
+    const guild = client.guilds.cache.get(guildId);
+    if (!guild) throw new Error(`⚠️ Keine Guild mit ID ${guildId} gefunden!`);
+  
+    const channel = guild.channels.cache.find(ch => ch.isTextBased() && ch.viewable);
+    if (!channel) throw new Error("⚠️ Kein Textkanal gefunden!");
+  
+    const invite = await guild.invites.create(channel.id, {
+      maxUses: 1,
+      maxAge: 86400,
+      unique: true,
+    });
+  
+    console.log("🔗 Invite erstellt:", invite.url);
+    return invite.url;
+}
+  
+
+// ---- Funktion: Mail auf Deutsch senden ----
+async function sendMailGerman(to, inviteLink) {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS,
+    },
+  });
+
+  await transporter.sendMail({
+    from: `"SimpleAI - Discord Community" <${process.env.MAIL_USER}>`,
+    to,
+    subject: "Herzlich Willkommen in der Community 🎉",
+    text: `Danke für dein Vertrauen in meine Tools!\n\nHier ist dein persönlicher Discord-Einladungslink (gültig für 24 Stunden, nur einmal nutzbar):\n${inviteLink}\n\nIch wünsche dir viel Spaß! Falls du Fragen oder Schwierigkeiten hast, kannst du mich jederzeit auch privat kontaktieren.\n\nLiebe Grüße\nAlex | SimpleAI`,
+  });
+
+  console.log("📧 Deutsche Mail verschickt an", to);
+}
+
+// ---- Funktion: Mail auf Englisch senden ----
+async function sendMailEnglish(to, inviteLink) {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS,
+    },
+  });
+
+  await transporter.sendMail({
+    from: `"SimpleAI - Discord Community" <${process.env.MAIL_USER}>`,
+    to,
+    subject: "Welcome to the Community 🎉",
+    text: `Thank you for trusting my tools!\n\nHere is your personal Discord invite link (valid for 24 hours, single use only):\n${inviteLink}\n\nI wish you lots of fun! If you have any questions or run into issues, feel free to reach out to me directly anytime.\n\nBest regards,\nAlex | SimpleAI`,
+  });  
+
+  console.log("📧 English Mail sent to", to);
+}
+
+// ---- Server starten ----
+app.listen(3000, () => console.log("🌐 Webhook Server läuft auf Port 3000"));

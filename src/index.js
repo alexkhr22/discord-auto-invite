@@ -46,32 +46,27 @@ app.post("/webhook", async (req, res) => {
   }
 
   // --- Kauf abgeschlossen ---
-if (event.type === "checkout.session.completed") {
+  if (event.type === "checkout.session.completed") {
     const session = event.data.object;
   
-    // line_items nachladen
-    const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
-      expand: ["line_items"],
-    });
+    // Hier direkt das Payment Link auslesen
+    const paymentLinkId = session.payment_link;
+    console.log("🪙 Payment Link ID:", paymentLinkId);
   
-    const lineItem = fullSession.line_items.data[0];
-    const priceId = lineItem.price.id;
-    console.log("🛒 Price ID gekauft:", priceId);
-  
-    // E-Mail prüfen
+    // Kunden-Email auslesen
     const customerEmail = session.customer_email || session.customer_details?.email;
     if (!customerEmail) {
       console.error("⚠️ Keine Kunden-E-Mail im Stripe-Event gefunden!");
       return;
     }
   
-    if (priceId === process.env.PRICE_ID_GERMAN) {
-        const inviteLink = await createInvite(process.env.GUILD_ID_GERMAN);
-        await sendMailGerman(customerEmail, inviteLink);
-      } else if (priceId === process.env.PRICE_ID_ENGLISH) {
-        const inviteLink = await createInvite(process.env.GUILD_ID_ENGLISH);
-        await sendMailEnglish(customerEmail, inviteLink);
-      }
+    if (paymentLinkId === process.env.PAYMENT_LINK_GERMAN) {
+      const inviteLink = await createInvite(process.env.GUILD_ID_GERMAN);
+      await sendMailGerman(customerEmail, inviteLink);
+    } else if (paymentLinkId === process.env.PAYMENT_LINK_ENGLISH) {
+      const inviteLink = await createInvite(process.env.GUILD_ID_ENGLISH);
+      await sendMailEnglish(customerEmail, inviteLink);
+    }
   }
 
   res.json({ received: true });

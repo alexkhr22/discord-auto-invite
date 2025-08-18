@@ -100,8 +100,6 @@ async function sendMailGerman(to, inviteLink) {
       user: process.env.BREVO_USER,
       pass: process.env.BREVO_PASS,
     },
-    logger: true,
-    debug: true,
   });
 
   await transporter.sendMail({
@@ -124,8 +122,6 @@ async function sendMailEnglish(to, inviteLink) {
       user: process.env.BREVO_USER,
       pass: process.env.BREVO_PASS,
     },
-    logger: true,
-    debug: true,
   });
 
   await transporter.sendMail({

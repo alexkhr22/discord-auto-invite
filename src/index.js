@@ -90,19 +90,22 @@ async function createInvite(guildId) {
     return invite.url;
 }
   
-
 // ---- Funktion: Mail auf Deutsch senden ----
 async function sendMailGerman(to, inviteLink) {
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false, // wichtig, bei 587 STARTTLS
     auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASS,
+      user: process.env.BREVO_USER,
+      pass: process.env.BREVO_PASS,
     },
+    logger: true,
+    debug: true,
   });
 
   await transporter.sendMail({
-    from: `"SimpleAI - Discord Community" <${process.env.MAIL_USER}>`,
+    from: `"SimpleAI - Discord Community" <${process.env.BREVO_USER}>`,
     to,
     subject: "Herzlich Willkommen in der Community 🎉",
     text: `Danke für dein Vertrauen in meine Tools!\n\nHier ist dein persönlicher Discord-Einladungslink (gültig für 24 Stunden, nur einmal nutzbar):\n${inviteLink}\n\nIch wünsche dir viel Spaß! Falls du Fragen oder Schwierigkeiten hast, kannst du mich jederzeit auch privat kontaktieren.\n\nLiebe Grüße\nAlex | SimpleAI`,
@@ -114,19 +117,19 @@ async function sendMailGerman(to, inviteLink) {
 // ---- Funktion: Mail auf Englisch senden ----
 async function sendMailEnglish(to, inviteLink) {
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false,
     auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASS,
+      user: process.env.BREVO_USER,
+      pass: process.env.BREVO_PASS,
     },
     logger: true,
     debug: true,
   });
 
   await transporter.sendMail({
-    from: `"SimpleAI - Discord Community" <${process.env.MAIL_USER}>`,
+    from: `"SimpleAI - Discord Community" <${process.env.BREVO_USER}>`,
     to,
     subject: "Welcome to the Community 🎉",
     text: `Thank you for trusting my tools!\n\nHere is your personal Discord invite link (valid for 24 hours, single use only):\n${inviteLink}\n\nI wish you lots of fun! If you have any questions or run into issues, feel free to reach out to me directly anytime.\n\nBest regards,\nAlex | SimpleAI`,

@@ -106,7 +106,7 @@ async function sendMailGerman(to, inviteLink) {
     from: `"SimpleAI - Discord Community" <noreply@simpleai-tools.de>`,
     to,
     subject: "Herzlich Willkommen in der Community 🎉",
-    text: `Danke für dein Vertrauen in meine Tools!\n\nHier ist dein persönlicher Discord-Einladungslink (gültig für 24 Stunden, nur einmal nutzbar):\n${inviteLink}\n\nIch wünsche dir viel Spaß! Falls du Fragen oder Schwierigkeiten hast, kannst du mich jederzeit auch privat kontaktieren.\n\nFalls der Link nicht funktioniert, schreibe mir bitte eine private Mail an: alex.khr@yahoo.com\n\nLiebe Grüße\nAlex | SimpleAI`,
+    text: `Danke für dein Vertrauen in unsere Tools!\n\nHier ist dein persönlicher Discord-Einladungslink (gültig für 24 Stunden, nur einmal nutzbar):\n${inviteLink}\n\nIch wünsche dir viel Spaß! Falls du Fragen oder Schwierigkeiten hast, kannst du Alex jederzeit auch privat auf Discord kontaktieren.\n\nFalls der Link nicht funktioniert, schreibe bitte eine private Mail an: alex.khr@yahoo.com\n\nLiebe Grüße\nGreta | SimpleAI`,
   });
 
   console.log("📧 Deutsche Mail verschickt an", to);
@@ -128,12 +128,11 @@ async function sendMailEnglish(to, inviteLink) {
     from: `"SimpleAI - Discord Community" <noreply@simpleai-tools.de>`,
     to,
     subject: "Welcome to the Community 🎉",
-    text: `Thank you for trusting my tools!\n\nHere is your personal Discord invite link (valid for 24 hours, single use only):\n${inviteLink}\n\nI wish you lots of fun! If you have any questions or run into issues, feel free to reach out to me directly anytime.\n\nIf the link does not work, please send me a private email at: alex.khr@yahoo.com\n\nBest regards,\nAlex | SimpleAI`,
+    text: `Thank you for trusting our tools!\n\nHere is your personal Discord invite link (valid for 24 hours, single use only):\n${inviteLink}\n\nI wish you lots of fun! If you have any questions or run into issues, feel free to reach out to Alex directly anytime.\n\nIf the link does not work, please send a private email at: alex.khr@yahoo.com\n\nBest regards,\nGreta | SimpleAI`,
   });  
 
   console.log("📧 English Mail sent to", to);
 }
-
 
 // ---- Server starten ----
 app.listen(3000, () => console.log("🌐 Webhook Server läuft auf Port 3000"));
